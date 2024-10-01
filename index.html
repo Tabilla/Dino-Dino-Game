@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dinosaur Game</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f7f7f7;
+            font-family: Arial, sans-serif;
+        }
+        #gameCanvas {
+            background-color: #fff;
+            border: 2px solid #333;
+            display: block;
+            position: relative;
+        }
+        #startMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: #333;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="600" height="200"></canvas>
+    <div id="startMessage">Press Space to Start</div>
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let dino = { x: 50, y: 150, width: 20, height: 20, dy: 0, gravity: 0.6, jumpPower: -10, isJumping: false };
+        let obstacles = [];
+        let score = 0;
+        let gameOver = false;
+
+        function startGame() {
+            gameOver = false;
+            score = 0;
+            obstacles = [];
+            dino.y = 150;
+            dino.dy = 0;
+            document.getElementById('startMessage').style.display = 'none';
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameLoop() {
+            if (gameOver) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawDino();
+            drawObstacles();
+            updateObstacles();
+            handleCollisions();
+            updateScore();
+
+            if (dino.isJumping) {
+                dino.dy += dino.gravity;
+                dino.y += dino.dy;
+
+                if (dino.y >= 150) {
+                    dino.y = 150;
+                    dino.isJumping = false;
+                    dino.dy = 0;
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function drawDino() {
+            ctx.fillStyle = '#333';
+            ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+        }
+
+        function drawObstacles() {
+            ctx.fillStyle = 'red';
+            for (let obstacle of obstacles) {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            }
+        }
+
+        function updateObstacles() {
+            if (Math.random() < 0.01) {
+                const height = Math.random() * 20 + 20;
+                obstacles.push({ x: canvas.width, y: 160 - height, width: 20, height });
+            }
+
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= 3;
+
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                    score++;
+                }
+            }
+        }
+
+        function handleCollisions() {
+            for (let obstacle of obstacles) {
+                if (
+                    dino.x < obstacle.x + obstacle.width &&
+                    dino.x + dino.width > obstacle.x &&
+                    dino.y < obstacle.y + obstacle.height &&
+                    dino.y + dino.height > obstacle.y
+                ) {
+                    gameOver = true;
+                    alert(`Game Over! Your score: ${score}`);
+                    document.getElementById('startMessage').style.display = 'block';
+                }
+            }
+        }
+
+        function updateScore() {
+            ctx.fillStyle = '#333';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 20);
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space') {
+                if (gameOver) {
+                    startGame();
+                } else if (!dino.isJumping) {
+                    dino.dy = dino.jumpPower;
+                    dino.isJumping = true;
+                }
+            }
+        });
+
+        document.getElementById('startMessage').style.display = 'block';
+    </script>
+</body>
+</html>
