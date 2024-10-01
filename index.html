@@ -3,149 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dinosaur Game</title>
+    <title>Roulette Game</title>
     <style>
         body {
+            font-family: Arial, sans-serif;
             margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f7f7f7;
-            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
         }
-        #gameCanvas {
-            background-color: #fff;
-            border: 2px solid #333;
-            display: block;
-            position: relative;
-            cursor: pointer; /* Change cursor to indicate interactivity */
+
+        .game-container {
+            width: 400px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
-        #startMessage {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 24px;
-            color: #333;
-            display: none;
+
+        input[type="number"], input[type="text"] {
+            width: 80%;
+            padding: 8px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .result {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="600" height="200"></canvas>
-    <div id="startMessage">Click to Start</div>
-    
+
+    <div class="game-container">
+        <h2>Roulette Game</h2>
+        <p>Total money: $<span id="total">500</span></p>
+
+        <label for="betAmount">Enter your bet amount:</label>
+        <input type="number" id="betAmount" placeholder="Enter bet amount"><br>
+
+        <label for="betChoice">Place your bet:</label>
+        <select id="betChoice">
+            <option value="0">Even</option>
+            <option value="1">Odd</option>
+            <option value="2">Number</option>
+        </select><br>
+
+        <label id="numberLabel" style="display:none;" for="betNumber">Choose a number (1-36):</label>
+        <input type="number" id="betNumber" style="display:none;" placeholder="Choose number"><br>
+
+        <button onclick="placeBet()">Spin the Wheel</button>
+
+        <div class="result" id="result"></div>
+
+        <p id="stats"></p>
+    </div>
+
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        let total = 500;
+        let win = 0, lose = 0, spin = 0;
+        let resultArr = Array(37).fill(0);
 
-        let dino = { x: 50, y: 150, width: 20, height: 20, dy: 0, gravity: 0.6, jumpPower: -10, isJumping: false };
-        let obstacles = [];
-        let score = 0;
-        let gameOver = false;
+        function placeBet() {
+            const betAmount = parseFloat(document.getElementById("betAmount").value);
+            const choice = parseInt(document.getElementById("betChoice").value);
+            let number = parseInt(document.getElementById("betNumber").value);
+            let resultText = "";
 
-        function startGame() {
-            gameOver = false;
-            score = 0;
-            obstacles = [];
-            dino.y = 150;
-            dino.dy = 0;
-            document.getElementById('startMessage').style.display = 'none';
-            requestAnimationFrame(gameLoop);
-        }
+            if (isNaN(betAmount) || betAmount <= 0) {
+                alert("Please enter a valid bet amount.");
+                return;
+            }
 
-        function gameLoop() {
-            if (gameOver) return;
+            if (choice === 2 && (isNaN(number) || number < 1 || number > 36)) {
+                alert("Please choose a valid number between 1 and 36.");
+                return;
+            }
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawDino();
-            drawObstacles();
-            updateObstacles();
-            handleCollisions();
-            updateScore();
+            if (betAmount > total) {
+                alert("You don't have enough money to place this bet.");
+                return;
+            }
 
-            if (dino.isJumping) {
-                dino.dy += dino.gravity;
-                dino.y += dino.dy;
+            const rouletteNum = Math.floor(Math.random() * 37);
+            spin++;
 
-                if (dino.y >= 150) {
-                    dino.y = 150;
-                    dino.isJumping = false;
-                    dino.dy = 0;
+            let result = 0;
+            if (choice === 2) {
+                result = (rouletteNum === number) ? 35 : 0;
+            } else {
+                if (rouletteNum !== 0 && rouletteNum % 2 === choice) {
+                    result = 1;
                 }
             }
 
-            requestAnimationFrame(gameLoop);
-        }
+            resultArr[rouletteNum]++;
 
-        function drawDino() {
-            ctx.fillStyle = '#333';
-            ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
-        }
-
-        function drawObstacles() {
-            ctx.fillStyle = 'red';
-            for (let obstacle of obstacles) {
-                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-            }
-        }
-
-        function updateObstacles() {
-            if (Math.random() < 0.01) {
-                const height = Math.random() * 20 + 20;
-                obstacles.push({ x: canvas.width, y: 160 - height, width: 20, height });
-            }
-
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                obstacles[i].x -= 3;
-
-                if (obstacles[i].x + obstacles[i].width < 0) {
-                    obstacles.splice(i, 1);
-                    score++;
+            if (result > 0) {
+                resultText += `Congratulations!!! You win! You won $${(result * betAmount).toFixed(2)}.<br>`;
+                total += (result + 1) * betAmount;
+                win++;
+            } else {
+                resultText += `You lose. Better luck next time! You lost $${betAmount.toFixed(2)}.<br>`;
+                total -= betAmount;
+                lose++;
+                if (total <= 0) {
+                    resultText += `You are out of money. Game over!<br>`;
+                    document.getElementById("betAmount").disabled = true;
+                    document.getElementById("betChoice").disabled = true;
+                    document.getElementById("betNumber").disabled = true;
+                    return;
                 }
             }
-        }
 
-        function handleCollisions() {
-            for (let obstacle of obstacles) {
-                if (
-                    dino.x < obstacle.x + obstacle.width &&
-                    dino.x + dino.width > obstacle.x &&
-                    dino.y < obstacle.y + obstacle.height &&
-                    dino.y + dino.height > obstacle.y
-                ) {
-                    gameOver = true;
-                    alert(`Game Over! Your score: ${score}`);
-                    document.getElementById('startMessage').style.display = 'block';
+            // Display stats
+            resultText += `Roulette number: ${rouletteNum}<br>`;
+            document.getElementById("total").innerText = total.toFixed(2);
+            document.getElementById("result").innerHTML = resultText;
+
+            let statsText = `You have won ${win} games and lost ${lose} games.<br>`;
+            statsText += `The wheel has been spun ${spin} times.<br>`;
+
+            for (let i = 1; i <= 36; i++) {
+                if (resultArr[i] > 0) {
+                    statsText += `The number ${i} won ${resultArr[i]} times.<br>`;
                 }
             }
+
+            document.getElementById("stats").innerHTML = statsText;
         }
 
-        function updateScore() {
-            ctx.fillStyle = '#333';
-            ctx.font = '20px Arial';
-            ctx.fillText(`Score: ${score}`, 10, 20);
-        }
-
-        // Start the game on canvas click
-        canvas.addEventListener('click', function() {
-            if (gameOver) {
-                startGame(); // Start game if it's over
+        // Toggle number input when the user selects "Number"
+        document.getElementById("betChoice").addEventListener("change", function() {
+            if (this.value == 2) {
+                document.getElementById("numberLabel").style.display = "block";
+                document.getElementById("betNumber").style.display = "block";
+            } else {
+                document.getElementById("numberLabel").style.display = "none";
+                document.getElementById("betNumber").style.display = "none";
             }
         });
-
-        // Make the dino jump on mouse down
-        canvas.addEventListener('mousedown', function() {
-            if (!gameOver) {
-                if (!dino.isJumping) {
-                    dino.dy = dino.jumpPower;
-                    dino.isJumping = true;
-                }
-            }
-        });
-
-        document.getElementById('startMessage').style.display = 'block';
     </script>
+
 </body>
 </html>
