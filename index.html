@@ -33,7 +33,7 @@
 </head>
 <body>
     <canvas id="gameCanvas" width="600" height="200"></canvas>
-    <div id="startMessage">Press Space to Start</div>
+    <div id="startMessage">Press "S" to Start</div>
     
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -128,7 +128,7 @@
         }
 
         document.addEventListener('keydown', function(event) {
-            if (event.code === 'Space') {
+            if (event.code === 'KeyS') { // Changed to "S" key
                 if (gameOver) {
                     startGame();
                 } else if (!dino.isJumping) {
