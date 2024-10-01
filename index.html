@@ -19,6 +19,7 @@
             border: 2px solid #333;
             display: block;
             position: relative;
+            cursor: pointer; /* Change cursor to indicate interactivity */
         }
         #startMessage {
             position: absolute;
@@ -33,7 +34,7 @@
 </head>
 <body>
     <canvas id="gameCanvas" width="600" height="200"></canvas>
-    <div id="startMessage">Press "S" to Start</div>
+    <div id="startMessage">Click to Start</div>
     
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -127,14 +128,18 @@
             ctx.fillText(`Score: ${score}`, 10, 20);
         }
 
-        document.addEventListener('keydown', function(event) {
-            if (event.code === 'KeyS') { // Changed to "S" key
-                if (gameOver) {
-                    startGame();
-                } else if (!dino.isJumping) {
-                    dino.dy = dino.jumpPower;
-                    dino.isJumping = true;
-                }
+        // Start the game on canvas click
+        canvas.addEventListener('click', function() {
+            if (gameOver) {
+                startGame();
+            }
+        });
+
+        // Make the dino jump on canvas click
+        canvas.addEventListener('mousedown', function() {
+            if (!dino.isJumping && !gameOver) {
+                dino.dy = dino.jumpPower;
+                dino.isJumping = true;
             }
         });
 
